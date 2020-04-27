@@ -1,14 +1,14 @@
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    
-    
-      chrome.storage.sync.get(['key'], function(result) {
-        console.log('Value currently is ' + result.key);
-      });
-    
-  
+
+    var doc = document.documentElement;
+    var sT = doc['scrollTop'];
+    var sH = doc['scrollHeight'];
+    var cH = doc['clientHeight'];
+      
     sendResponse({
       url: window.location.href,
-      currentProgress: 80,
-      totalHeight: 100,
+      scrollTop: sT,
+      scrollHeight: sH, 
+      clientHeight: cH
     });
 })
