@@ -1,43 +1,103 @@
-var linksList = {};
+//         links: {
+//             'idv141uivu6jqrelhyxiwlyj': {
+//                 link: 'https://google.com',
+//                 percentage: 80
+//             }
+// };
+
+    // <div class="list-item">
+    //       <i class="fa fa-trash"></i></i>
+    //       <a href="#">https://google.com</a>
+    //   </div>
 
 const onSave = () => {
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, '', saveBookmark)
+        chrome.tabs.sendMessage(tabs[0].id, {'action': 'getCurrent'}, saveBookmark)
     })  
 };
 
 const onDelete = (e) => {
     const id = e.target.parentNode.id;
 
+    // delete from ui
     const element = document.querySelector('#' + id);
     element.remove(); 
-
     e.stopPropagation();
 
-    // todo: remove from storage
+    // delete from storage
+    chrome.storage.sync.get(['links'], (result) => {
+        const links = result.links;
+        delete links[id];
+        
+        chrome.storage.sync.set({
+            links: links
+        });
+    });
 };
 
-const onOpen = () => {
-    alert('open');
+const onOpen = (e) => {
+    const id = e.target.parentNode.id;
+    
+    chrome.storage.sync.get(['links'], (result) => {
+        const links = result.links;
+
+        const linkUrl = links[id].link;
+        const percentage = links[id].percentage;
+
+        chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
+            chrome.tabs.update(tabs[0].id, {url: linkUrl}, () => {
+                chrome.tabs.sendMessage(tabs[0].id, { 'action': 'openNew', 'percentage': percentage });
+            });
+        });
+
+        // NOT WORKING WITH OPENING IT IN A NEW TAB
+
+        // chrome.tabs.create({url: linkUrl, active: true}, (tab) => {
+        //     alert('created');
+        //     chrome.tabs.sendMessage(tab.id, { 'action': 'openNew', 'percentage': percentage }, () => {});
+        // });
+
+        // chrome.tabs.create({url: linkUrl}, (tab) => {
+        //     chrome.tabs.onUpdated.addListener(function loadedListener(tabId, info) {
+        //         if (info.status === 'complete' && tabId === tab.id) {  
+        //             alert('listener');                  
+        //             console.log('listener');                  
+        //             chrome.tabs.sendMessage(tab.id, { 'action': 'openNew', 'percentage': percentage }, () => {});
+        //             chrome.tabs.onUpdated.removeListener(loadedListener);
+        //         }
+        //     });
+        // });
+    });
+    
+    
 };
 
-const saveBookmark = (res) => {
+const saveBookmark = (result) => {
 
     const id = createUUID();
+    const percentage = getScrollPercentage(result.scrollTop, result.scrollHeight, result.clientHeight)
+    const linkURL = result.url;
 
-    createListItem(res.url, id);
-    
-    // alert(getScrollPercentage(res.scrollTop, res.scrollHeight, res.clientHeight));
+    // add to ui
+    createListItem(linkURL, id);
 
-    // todo: add to storage
+    // add to storage
+    chrome.storage.sync.get(['links'], (result) => {
+        const links = result.links;
+        
+        links[id] = {
+            link: linkURL,
+            percentage: percentage
+        };
+        
+        chrome.storage.sync.set({
+            links: links
+        });
+    });
 }
 
 const getScrollPercentage = (scrollTop, scrollHeight, clientHeight) => {
     return (scrollTop / (scrollHeight - clientHeight)) * 100;
-}
-
-const getPixelsToScroll = (scrollPercentage, scrollHeight, clientHeight) => {
-    return (scrollPercentage * (scrollHeight - clientHeight)) / 100;
 }
 
 const createUUID = () => {
@@ -45,8 +105,6 @@ const createUUID = () => {
 }
 
 const createListItem = (linkURL, id) => {
-    console.table(linksList);
-
     const listItem = document.createElement('div');
     listItem.classList.add('list-item');
     listItem.id = id;
@@ -56,7 +114,7 @@ const createListItem = (linkURL, id) => {
     bin.classList.add('fa-trash');
     bin.classList.add('bin');
 
-    const link = document.createElement('a');
+    const link = document.createElement('span');
     link.href = linkURL;
     
     const linkText = document.createTextNode(linkURL);
@@ -64,74 +122,26 @@ const createListItem = (linkURL, id) => {
 
     listItem.appendChild(bin);
     listItem.appendChild(link);
-
     document.querySelector('.list').appendChild(listItem);     
 
     bin.addEventListener('click', onDelete, false);
     listItem.addEventListener('click', onOpen, false);
-
-        // <div class="list-item">
-    //       <i class="fa fa-trash"></i></i>
-    //       <a href="#">https://google.com</a>
-    //   </div>
 }
 
-const loadInitial = async () => {
-    await chrome.storage.sync.get(['links'], (result) => {
-        // create items
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelector('button').addEventListener('click', onSave, false);
+    
+    // create items
+    chrome.storage.sync.get(['links'], (result) => {
         const links = result.links;
         const keys = Object.keys(result.links);
         for (const key of keys) {
             createListItem(links[key].link, key);
         }
-
-        linksList = result.links;
     });
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('button').addEventListener('click', onSave, false);
-
-    // set a sample value
-    // chrome.storage.sync.set({firstUrl: {data: 'test - - jona'}}, () => {
-    //     alert('Value is set to ' + value);
-    // });
-
-    // chrome.storage.sync.clear(() => {
-    //     alert('Cleared');
-    // });
-
-    // chrome.storage.sync.set({ 
-    //         links: {
-    //             'idv141uivu6jqrelhyxiwlyj': {
-    //                 link: 'https://google.com',
-    //                 percentage: 80
-    //             },
-    //             'id3v1zwyqhrfs9it8v0099pm': {
-    //                 link: 'https://google11111.com',
-    //                 percentage: 20
-    //             },
-    //             'ide1iqsjt3nxhq0cxw8qgtf': {
-    //                 link: 'https://google2222.com',
-    //                 percentage: 50
-    //             }
-    //         }
-
-    //     }, () => {
-    //     alert('Value is set to');
-    // });
-
-
-
-    
-    loadInitial();
-
-    console.table(linksList);
-
-
+    // chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
+    //     chrome.tabs.sendMessage(tabs[0].id, { 'action': 'openNew', 'percentage': 80 }, () => {});
+    // })  
 
 }, false);
-
-
-// get the id of the element
-// alert(event.srcElement.id);
