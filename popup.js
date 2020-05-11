@@ -1,15 +1,3 @@
-//         links: {
-//             'idv141uivu6jqrelhyxiwlyj': {
-//                 link: 'https://google.com',
-//                 percentage: 80
-//             }
-// };
-
-    // <div class="list-item">
-    //       <i class="fa fa-trash"></i></i>
-    //       <a href="#">https://google.com</a>
-    //   </div>
-
 const onSave = () => {
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
         chrome.tabs.sendMessage(tabs[0].id, {'action': 'getCurrent'}, saveBookmark)
@@ -43,30 +31,14 @@ const onOpen = (e) => {
 
         const linkUrl = links[id].link;
         const percentage = links[id].percentage;
-
+       
         chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
             chrome.tabs.update(tabs[0].id, {url: linkUrl}, () => {
-                chrome.tabs.sendMessage(tabs[0].id, { 'action': 'openNew', 'percentage': percentage });
+                setTimeout(() => {
+                    chrome.tabs.sendMessage(tabs[0].id, { 'action': 'openNew', 'percentage': percentage });
+                }, 1000);
             });
         });
-
-        // NOT WORKING WITH OPENING IT IN A NEW TAB
-
-        // chrome.tabs.create({url: linkUrl, active: true}, (tab) => {
-        //     alert('created');
-        //     chrome.tabs.sendMessage(tab.id, { 'action': 'openNew', 'percentage': percentage }, () => {});
-        // });
-
-        // chrome.tabs.create({url: linkUrl}, (tab) => {
-        //     chrome.tabs.onUpdated.addListener(function loadedListener(tabId, info) {
-        //         if (info.status === 'complete' && tabId === tab.id) {  
-        //             alert('listener');                  
-        //             console.log('listener');                  
-        //             chrome.tabs.sendMessage(tab.id, { 'action': 'openNew', 'percentage': percentage }, () => {});
-        //             chrome.tabs.onUpdated.removeListener(loadedListener);
-        //         }
-        //     });
-        // });
     });
     
     
@@ -131,7 +103,6 @@ const createListItem = (linkURL, id) => {
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('button').addEventListener('click', onSave, false);
     
-    // create items
     chrome.storage.sync.get(['links'], (result) => {
         const links = result.links;
         const keys = Object.keys(result.links);
@@ -139,9 +110,5 @@ document.addEventListener('DOMContentLoaded', () => {
             createListItem(links[key].link, key);
         }
     });
-
-    // chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-    //     chrome.tabs.sendMessage(tabs[0].id, { 'action': 'openNew', 'percentage': 80 }, () => {});
-    // })  
 
 }, false);

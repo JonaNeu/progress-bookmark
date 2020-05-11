@@ -7,13 +7,14 @@ const getPixelsToScroll = (scrollPercentage, scrollHeight, clientHeight) => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const doc = document.documentElement;
+  const bod = document.body
+
+  const sT = doc['scrollTop'] | bod['scrollTop'];
+  const sH = doc['scrollHeight'] | bod['scrollHeight'];
+  const cH = doc['clientHeight'];
   
   switch(request.action) {
     case 'getCurrent': 
-      const sT = doc['scrollTop'];
-      const sH = doc['scrollHeight'];
-      const cH = doc['clientHeight'];
-        
       sendResponse({
         url: window.location.href,
         scrollTop: sT,
@@ -22,7 +23,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
       break;
     case 'openNew':
-      window.scrollTo(0, getPixelsToScroll(request.percentage, doc['scrollHeight'], doc['clientHeight']));
+      window.scrollTo(0, getPixelsToScroll(request.percentage, sH, cH));
       break;
     default: 
       break;
