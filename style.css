@@ -9,17 +9,27 @@
 }
 
 button {
-    color: white;
-    background-color: blue;
+    color: #ffffff;
+    background-color: #002171;
     font-weight: bold;
+    font-size: 20px;
     width: 100%;
     min-height: 50px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-    transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0);
+    transition-duration: 0.5s;
+    transition-property: box-shadow, transform;
 }
 
 button:hover {
-    box-shadow: 0 3px 6px rgba(0,0,0,0.25), 0 3px 6px rgba(0,0,0,0.22);
+    transform: scale(1.1);
+}
+
+button:active {
+    transform: scale(0.9);
+}
+
+button:focus {
+    outline: none;
 }
 
 .list {
@@ -32,16 +42,54 @@ button:hover {
     vertical-align: middle;
     align-items: center;
     min-height: 30px;
-    color: black;
-    background-color: #DCDCDC;
+    color: #212121;
+    background-color: #eceff1;
     padding: 10px;
     overflow: scroll;
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.75;
 }
+
+.list-item:hover {
+    opacity: 1;
+}
+
+.list-item > span {
+    padding-right: 10px;
+}
+
+
 
 .list-item:nth-child(odd) {
-    background: white;
+    background: #ffffff;
 }
 
-.bin {
-    padding-right: 10px;
+.del {
+    margin-right: 15px;
+    padding-left: 10px;
+    cursor: pointer;
+    height: 12px;
+    position: relative;
+    opacity: 0.5;
+}
+
+.del:after {
+    content: '';
+    height: 12px;
+    border-left: 2px solid #212121;
+    position: absolute;
+    transform: rotate(45deg);
+}
+
+.del:before {
+    content: '';
+    height: 12px;
+    border-left: 2px solid #212121;
+    position: absolute;
+    transform: rotate(-45deg);
+}
+
+.del:hover {
+    opacity: 1;
 }

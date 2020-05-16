@@ -1,6 +1,6 @@
 const onSave = () => {
     chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-        chrome.tabs.sendMessage(tabs[0].id, {'action': 'getCurrent'}, saveBookmark)
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'getCurrent' }, saveBookmark)
     })  
 };
 
@@ -31,17 +31,25 @@ const onOpen = (e) => {
 
         const linkUrl = links[id].link;
         const percentage = links[id].percentage;
-       
+
         chrome.tabs.query({currentWindow: true, active: true}, (tabs) => {
-            chrome.tabs.update(tabs[0].id, {url: linkUrl}, () => {
-                setTimeout(() => {
-                    chrome.tabs.sendMessage(tabs[0].id, { 'action': 'openNew', 'percentage': percentage });
-                }, 1000);
+            
+            // add listener waiting for the tab to be loaded
+            chrome.tabs.onUpdated.addListener(function listener (tabId, info) {
+                if (info.status === 'complete' && tabId === tabs[0].id) {
+                    // to be sure the tab content is loaded we wait a bit longer
+                    setTimeout(() => {
+                        chrome.tabs.sendMessage(tabs[0].id, { action: 'openNew', percentage: percentage });
+                    }, 1500);
+                    // remove the listener immediately after action is performed
+                    chrome.tabs.onUpdated.removeListener(listener);
+                }
             });
+
+            // update the tab tab to open the bookmarked site
+            chrome.tabs.update(tabs[0].id, {url: linkUrl}, () => {});
         });
     });
-    
-    
 };
 
 const saveBookmark = (result) => {
@@ -55,7 +63,10 @@ const saveBookmark = (result) => {
 
     // add to storage
     chrome.storage.sync.get(['links'], (result) => {
-        const links = result.links;
+        let links = result.links;
+        if (links === undefined) {
+            links = {};
+        }
         
         links[id] = {
             link: linkURL,
@@ -81,10 +92,8 @@ const createListItem = (linkURL, id) => {
     listItem.classList.add('list-item');
     listItem.id = id;
 
-    const bin = document.createElement('i');
-    bin.classList.add('fa');
-    bin.classList.add('fa-trash');
-    bin.classList.add('bin');
+    const del = document.createElement('div');
+    del.classList.add('del');
 
     const link = document.createElement('span');
     link.href = linkURL;
@@ -92,19 +101,21 @@ const createListItem = (linkURL, id) => {
     const linkText = document.createTextNode(linkURL);
     link.appendChild(linkText);
 
-    listItem.appendChild(bin);
+    listItem.appendChild(del);
     listItem.appendChild(link);
     document.querySelector('.list').appendChild(listItem);     
 
-    bin.addEventListener('click', onDelete, false);
+    del.addEventListener('click', onDelete, false);
     listItem.addEventListener('click', onOpen, false);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('button').addEventListener('click', onSave, false);
     
+    // load stored items
     chrome.storage.sync.get(['links'], (result) => {
         const links = result.links;
+
         const keys = Object.keys(result.links);
         for (const key of keys) {
             createListItem(links[key].link, key);
