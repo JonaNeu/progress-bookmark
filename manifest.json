@@ -3,7 +3,7 @@
     "version": "1.0",
     "manifest_version": 2,
     "author": "Jona Neumeier",
-    "description": "A simple extension to bookmark the progress of the current a website.",
+    "description": "A simple extension to bookmark the progress / scroll percentage of the current a website.",
     "icons": {
       "16": "/img/icon/icon16.png",
       "32": "/img/icon/icon32.png",
@@ -23,6 +23,6 @@
       "default_title": "Progress Bookmark"
     },
     "permissions": [
-        "storage", "tabs"
+        "storage", "tabs", "activeTab"
     ]
   }

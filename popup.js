@@ -40,7 +40,7 @@ const onOpen = (e) => {
                     // to be sure the tab content is loaded we wait a bit longer
                     setTimeout(() => {
                         chrome.tabs.sendMessage(tabs[0].id, { action: 'openNew', percentage: percentage });
-                    }, 1500);
+                    }, 500);
                     // remove the listener immediately after action is performed
                     chrome.tabs.onUpdated.removeListener(listener);
                 }
